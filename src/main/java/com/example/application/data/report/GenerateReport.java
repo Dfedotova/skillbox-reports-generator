@@ -48,7 +48,9 @@ public class GenerateReport {
         nf.setMaximumFractionDigits(2);
     }
 
-    public static void setAuthenticatedUser(User user) { authUser = user; }
+    public static void setAuthenticatedUser(User user) {
+        authUser = user;
+    }
 
     public int createTemplateForContractor() throws InvalidFormatException, IOException, XmlException {
         XWPFDocument doc = new XWPFDocument();
@@ -105,6 +107,7 @@ public class GenerateReport {
                 addRowsNumber, partnerCoursesShares);
 
         double F = parsing.getProceedTotalsSum() - parsing.getRefundTotalsSum();
+        String correctReward = "";
 
         for (XWPFTable tbl : copy.getTables()) {
             for (XWPFTableRow row : tbl.getRows()) {
@@ -116,8 +119,11 @@ public class GenerateReport {
                             if (report.getReportModel().equals("Модель К2"))
                                 text = updateK2Table(text);
 
+                            if (correctReward.equals(""))
+                                correctReward = getCorrectReward(F);
+
                             text = updateCommonTables(text, partnerCoursesProceeds, partnerCoursesRefunds,
-                                    partnerCoursesShares, getCorrectReward(F), F);
+                                    partnerCoursesShares, correctReward, F);
 
                             r.setText(text, 0);
                         }
@@ -131,7 +137,7 @@ public class GenerateReport {
             if (runs != null) {
                 for (XWPFRun r : runs) {
                     String text = r.getText(0);
-                    r.setText(updateMainText(text, getCorrectReward(F), getRubles()), 0);
+                    r.setText(updateMainText(text, correctReward, getRubles()), 0);
                 }
             }
         }
@@ -412,7 +418,7 @@ public class GenerateReport {
         return result.toString();
     }
 
-    private String getCorrectReward(double F){
+    private String getCorrectReward(double F) {
         if (report.getReportModel().equals("Чистая выручка")) {
             double reward = F * Double.parseDouble(report.getRoyaltyPercentage()) / 100;
             rewardResult = df.format(reward);
@@ -421,7 +427,7 @@ public class GenerateReport {
         return nf.format(rewardResDouble);
     }
 
-    private int getRubles(){
+    private int getRubles() {
         return Integer.parseInt(rewardResult.split("\\.")[0]);
     }
 
