@@ -101,9 +101,9 @@ public class GenerateReport {
         List<List<String>> partnerCoursesRefunds = parsing.getPartnerCoursesRefunds();
         List<List<String>> partnerCoursesShares = parsing.getPartnerCoursesShares();
 
-        insertRowsInTables(copy, 1, addRowsNumber, partnerCoursesProceeds);
-        insertRowsInTables(copy, 2, addRowsNumber, partnerCoursesRefunds);
-        insertRowsInTables(copy, report.getReportModel().equals("Чистая выручка") ? 3 : 4,
+        insertRowsInTables(copy, 2, addRowsNumber, partnerCoursesProceeds);
+        insertRowsInTables(copy, 3, addRowsNumber, partnerCoursesRefunds);
+        insertRowsInTables(copy, report.getReportModel().equals("Чистая выручка") ? 4 : 5,
                 addRowsNumber, partnerCoursesShares);
 
         double F = parsing.getProceedTotalsSum() - parsing.getRefundTotalsSum();
@@ -204,6 +204,12 @@ public class GenerateReport {
                                       List<List<String>> partnerCoursesRefunds,
                                       List<List<String>> partnerCoursesShares,
                                       String rewardResult, double F) {
+        text = replaceTag(text, "PeriodBeginning", WordsConverter.getDayOfMonth(periodStart.getDayOfMonth()));
+        text = replaceTag(text, "PeriodEnding", WordsConverter.getDayOfMonth(periodEnd.getDayOfMonth()));
+        text = replaceTag(text, "PeriodMonth",
+                WordsConverter.convertGenetiveNumericMonthToString(periodStart.getMonthValue()));
+        text = replaceTag(text, "PeriodYear", "" + periodStart.getYear());
+
         text = replaceTag(text, "RoyaltyPercentage", getCorrectDoubleValue(report.getRoyaltyPercentage()));
         text = replaceTag(text, "PartnerCourse", partnerCoursesShares.get(0).get(0));
         text = replaceTag(text, "CourseShare", partnerCoursesShares.get(0).get(1));
@@ -224,6 +230,9 @@ public class GenerateReport {
                 contractor.getFirstName().charAt(0) + ". " +
                         contractor.getSecondName().charAt(0) + ". " +
                         contractor.getLastName());
+
+        text = changeSigner(text);
+
         return text;
     }
 
@@ -257,7 +266,7 @@ public class GenerateReport {
 
         text = replaceTag(text, "PeriodBeginning", WordsConverter.getDayOfMonth(periodStart.getDayOfMonth()));
         text = replaceTag(text, "PeriodEnding", WordsConverter.getDayOfMonth(periodEnd.getDayOfMonth()));
-        text = replaceTag(text, "PeriodMonth", WordsConverter.getDayOfMonth(periodStart.getMonthValue()));
+        text = replaceTag(text, "PeriodMonthK2", WordsConverter.getDayOfMonth(periodStart.getMonthValue()));
         text = replaceTag(text, "PeriodYear", Integer.toString(periodStart.getYear()));
 
         text = replaceTag(text, "HWNum", Integer.toString(customerHWNum + executorHWNum));
@@ -272,6 +281,57 @@ public class GenerateReport {
         text = replaceTag(text, "Final", nf.format(finalResult));
 
         rewardResult = df.format(finalResult * royalty);
+
+        return text;
+    }
+
+    private String changeSigner(String text) {
+        String initials;
+        String proxyNumber;
+        String proxyDate;
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("в лице ");
+        switch (report.getCourseDirection()) {
+            case "Программирование":
+                sb.append("Сырычко Александра Васильевича");
+                initials = "А.В. Сырычко";
+                proxyNumber = "242";
+                proxyDate = "22.04.2022";
+                break;
+            case "Дизайн":
+            case "Мультимедиа":
+                sb.append("Климова Антона Александровича");
+                initials = "А.А. Климов";
+                proxyNumber = "149";
+                proxyDate = "30.07.2021";
+                break;
+            case "Игры":
+            case "Маркетинг":
+                sb.append("Татьянкина Дениса Александровича");
+                initials = "Д.А. Татьянкин";
+                proxyNumber = "150";
+                proxyDate = "30.07.2021";
+                break;
+            case "Управлениe":
+                sb.append("Прудникова Кирилла Павловича");
+                initials = "К.П. Прудников";
+                proxyNumber = "228";
+                proxyDate = "15.02.2022";
+                break;
+            default:
+                sb.append("Копылова Антона Сергеевича");
+                initials = "А.С. Копылов";
+                proxyNumber = "210";
+                proxyDate = "31.12.2021";
+                break;
+        }
+        sb.append(", действующего на основании Доверенности №")
+                .append(proxyNumber).append(" от ")
+                .append(proxyDate).append(" г.");
+
+        text = replaceTag(text, "SignerInitials", initials);
+        text = replaceTag(text, "Signer", sb.toString());
 
         return text;
     }
