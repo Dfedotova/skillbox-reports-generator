@@ -36,6 +36,8 @@ public class GenerateReport {
 
     private String rewardResult;
 
+    private double oa;
+
     public GenerateReport(SampleContractor contractor, SampleReport report,
                           LocalDate periodStart, LocalDate periodEnd) {
         this.contractor = contractor;
@@ -197,6 +199,8 @@ public class GenerateReport {
         text = replaceTag(text, "RewardCoins",
                 WordsConverter.convertCoinsToGenitive(rewardSplitted.get(1)));
 
+        text = changeSigner(text);
+
         return text;
     }
 
@@ -241,10 +245,10 @@ public class GenerateReport {
         text = replaceTag(text, "K2Sum", nf.format(parsing.getProceedTotalsSum() *
                 Double.parseDouble(report.getK2().replace(',', '.')) / 100));
 
-        text = replaceTag(text, "CustomerHWCosts", nf.format(parsing.getCustomerHWCostsSum()));
-        text = replaceTag(text, "CustomerDiplomaCosts", nf.format(parsing.getCustomerDiplomaCostsSum()));
-        double oa = parsing.getCustomerHWCostsSum() + parsing.getCustomerDiplomaCostsSum();
-        text = replaceTag(text, "CustomerCostsSum", nf.format(oa));
+        /*text = replaceTag(text, "CustomerHWCosts", nf.format(parsing.getCustomerHWCostsSum()));
+        text = replaceTag(text, "CustomerDiplomaCosts", nf.format(parsing.getCustomerDiplomaCostsSum()));*/
+        /*double oa = parsing.getCustomerHWCostsSum() + parsing.getCustomerDiplomaCostsSum();
+        text = replaceTag(text, "CustomerCostsSum", nf.format(oa));*/
 
         text = replaceTag(text, "ExecutorHWCosts", nf.format(parsing.getExecutorHWCostsSum()));
         text = replaceTag(text, "ExecutorDiplomaCosts", nf.format(parsing.getExecutorDiplomaCostsSum()));
@@ -255,10 +259,11 @@ public class GenerateReport {
         int executorHWNum = parsing.getExecutorHWNumber();
         int customerDiplomaNum = parsing.getCustomerDiplomaNumber();
         int executorDiplomaNum = parsing.getExecutorDiplomaNumber();
-        text = replaceTag(text, "CustomerHWPrice",
+        text = changePrices(parsing, text);
+        /*text = replaceTag(text, "CustomerHWPrice",
                 getPricesForK2(parsing.getCustomerHWCostsSum(), customerHWNum, 200));
         text = replaceTag(text, "CustomerDiplomaPrice",
-                getPricesForK2(parsing.getCustomerDiplomaCostsSum(), customerDiplomaNum, 1000));
+                getPricesForK2(parsing.getCustomerDiplomaCostsSum(), customerDiplomaNum, 1000));*/
         text = replaceTag(text, "ExecutorHWPrice",
                 getPricesForK2(parsing.getExecutorHWCostsSum(), executorHWNum, 200));
         text = replaceTag(text, "ExecutorDiplomaPrice",
@@ -290,50 +295,140 @@ public class GenerateReport {
         String proxyNumber;
         String proxyDate;
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("в лице ");
+        StringBuilder sbSigner = new StringBuilder();
+        sbSigner.append("в лице ");
         switch (report.getCourseDirection()) {
             case "Программирование":
-                sb.append("Сырычко Александра Васильевича");
+                sbSigner.append("Сырычко Александра Васильевича");
                 initials = "А.В. Сырычко";
                 proxyNumber = "242";
                 proxyDate = "22.04.2022";
                 break;
             case "Дизайн":
             case "Мультимедиа":
-                sb.append("Климова Антона Александровича");
+                sbSigner.append("Климова Антона Александровича");
                 initials = "А.А. Климов";
                 proxyNumber = "149";
                 proxyDate = "30.07.2021";
                 break;
             case "Игры":
             case "Маркетинг":
-                sb.append("Татьянкина Дениса Александровича");
+                sbSigner.append("Татьянкина Дениса Александровича");
                 initials = "Д.А. Татьянкин";
                 proxyNumber = "150";
                 proxyDate = "30.07.2021";
                 break;
-            case "Управлениe":
-                sb.append("Прудникова Кирилла Павловича");
+            case "Управление":
+                sbSigner.append("Прудникова Кирилла Павловича");
                 initials = "К.П. Прудников";
                 proxyNumber = "228";
                 proxyDate = "15.02.2022";
                 break;
             default:
-                sb.append("Копылова Антона Сергеевича");
+                sbSigner.append("Копылова Антона Сергеевича");
                 initials = "А.С. Копылов";
                 proxyNumber = "210";
                 proxyDate = "31.12.2021";
                 break;
         }
-        sb.append(", действующего на основании Доверенности №")
+        sbSigner.append(", действующего на основании Доверенности №")
                 .append(proxyNumber).append(" от ")
                 .append(proxyDate).append(" г.");
 
+        String proxy = "на основании доверенности №" + proxyNumber + " от " + proxyDate + " г.";
+
+        text = replaceTag(text, "SignerProxy", proxy);
         text = replaceTag(text, "SignerInitials", initials);
-        text = replaceTag(text, "Signer", sb.toString());
+        text = replaceTag(text, "Signer", sbSigner.toString());
 
         return text;
+    }
+
+    private String changePrices(ExcelParsing parsing, String text) {
+        int hwPrice = 200;
+        int diplomaPrice = 1000;
+        int hwSum;
+        int diplomaSum;
+
+        if (checkByContractorsName("Новожилов", "Юрий", "Вячеславович", "298")
+                || checkByContractorsName("Мардамшин", "Наиль", "Ришатович", "181")) {
+            hwPrice = 200;
+            diplomaPrice = 1000;
+        } else if (checkByContractorsName("Синицына", "Наиля", "Вадимовна", "304")
+                || checkByContractorsName("Анцукевич", "Сергей", "Юрьевич", "291")
+                || checkByContractorsName("Анцукевич", "Сергей", "Юрьевич", "332")
+                || checkByContractorsName("Цыганов", "Роман", "Александрович", "207")
+                || checkByContractorsName("Гладышева", "Дарья", "Михайловна", "314")
+                || checkByContractorsName("Зернов", "Илья", "Александрович", "312")
+                || checkByContractorsName("Зернов", "Илья", "Александрович", "333")
+                || checkByContractorsName("Казачков", "Евгений", "Борисович", "274")
+                || checkByContractorsName("Дозорцев", "Вадим", "Юльевич", "106")
+                || checkByContractorsName("Крутова", "Александра", "Сергеевна", "384")
+                || checkByContractorsName("Марчук", "Анна", "Петровна", "387")
+                || checkByContractorsName("Пискарева", "Виктория", "Алексеевна", "345")
+                || checkByContractorsName("Соколова", "Анна", "Аркадьевна", "146")
+                || checkByContractorsName("Юрчук", "Анна", "Александровна", "318")) {
+            hwPrice = 300;
+            diplomaPrice = 2000;
+        } else if (checkByContractorsName("Орлов", "Петр", "Сергеевич", "175")) {
+            hwPrice = 0;
+            diplomaPrice = 0;
+        } else if (contractor.getOOOName() != null) {
+            if (checkByOOOName("ОМАЙБРЕНД", "319")
+                    || checkByOOOName("СПОРТ МЕДИА", "296")
+                    || checkByOOOName("МОСКОВСКИЙ ГОСУДАРСТВЕННЫЙ УНИВЕРСИТЕТ ИМЕНИ М.В.ЛОМОНОСОВА, МГУ ИМЕНИ М.В.ЛОМОНОСОВА, МОСКОВСКИЙ УН", "349")
+                    || checkByOOOName("АРТОКС МЕДИА", "471")
+                    || checkByOOOName("ОСМЫСЛЕННО", "413")
+                    || checkByOOOName("ПИ.АР. - ТЕКНОЛОДЖИС", "350")
+                    || checkByOOOName("СТУДИЯ Д. КУПОВЫХ", "398")
+                    || checkByOOOName("СТУДИЯ Д. КУПОВЫХ", "399")
+                    || checkByOOOName("СТУДИЯ Д. КУПОВЫХ", "406")
+                    || checkByOOOName("СТУДИЯ Д. КУПОВЫХ", "407")
+                    || checkByOOOName("СТУДИЯ Д. КУПОВЫХ", "423")
+                    || checkByOOOName("АДВЕНТУМ КОНСАЛТИНГ", "372")) {
+                hwPrice = 300;
+                diplomaPrice = 2000;
+            } else if (checkByOOOName("ПИ.АР. - ТЕКНОЛОДЖИС", "220")) {
+                hwPrice = 240;
+                diplomaPrice = 1200;
+            } else if (checkByOOOName("ЛОГОМАШИНА", "116")) {
+                hwPrice = 200;
+                diplomaPrice = 0;
+            }
+        } else {
+            text = replaceTag(text, "CustomerHWPrice", getPricesForK2(parsing.getCustomerHWCostsSum(), parsing.getCustomerHWNumber(), 200));
+            text = replaceTag(text, "CustomerDiplomaPrice", getPricesForK2(parsing.getCustomerDiplomaCostsSum(), parsing.getCustomerDiplomaNumber(), 1000));
+            text = replaceTag(text, "CustomerHWCosts", nf.format(parsing.getCustomerHWCostsSum()));
+            text = replaceTag(text, "CustomerDiplomaCosts", nf.format(parsing.getCustomerDiplomaCostsSum()));
+            oa = parsing.getCustomerHWCostsSum() + parsing.getCustomerDiplomaCostsSum();
+            text = replaceTag(text, "CustomerCostsSum", nf.format(oa));
+            return text;
+        }
+
+        hwSum = countSumForHWAndDiploma(hwPrice, parsing.getCustomerHWNumber());
+        diplomaSum = countSumForHWAndDiploma(diplomaPrice, parsing.getCustomerDiplomaNumber());
+        oa = hwSum + diplomaSum;
+
+        text = replaceTag(text, "CustomerHWPrice", Integer.toString(hwPrice));
+        text = replaceTag(text, "CustomerDiplomaPrice", Integer.toString(diplomaPrice));
+        text = replaceTag(text, "CustomerHWCosts", nf.format(hwSum));
+        text = replaceTag(text, "CustomerDiplomaCosts", nf.format(diplomaSum));
+
+        text = replaceTag(text, "CustomerCostsSum", nf.format(oa));
+        return text;
+    }
+
+    private boolean checkByContractorsName(String lastName, String firstName, String secondName, String courseCode) {
+        return contractor.getLastName().equals(lastName) && contractor.getFirstName().equals(firstName)
+                && contractor.getSecondName().equals(secondName) && report.getCourseCode().equals(courseCode);
+    }
+
+    private boolean checkByOOOName(String OOOName, String courseCode) {
+        return contractor.getOOOName().equals(OOOName) && report.getCourseCode().equals(courseCode);
+    }
+
+    private int countSumForHWAndDiploma(int price, int number){
+        return price * number;
     }
 
     private String getPricesForK2(double sum, int num, int defaultValue) {
