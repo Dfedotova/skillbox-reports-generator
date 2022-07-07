@@ -305,14 +305,14 @@ public class GenerateReport {
                 proxyDate = "22.04.2022";
                 break;
             case "Дизайн":
-            case "Мультимедиа":
+            //case "Мультимедиа":
                 sbSigner.append("Климова Антона Александровича");
                 initials = "А.А. Климов";
                 proxyNumber = "149";
                 proxyDate = "30.07.2021";
                 break;
             case "Игры":
-            case "Маркетинг":
+            //case "Маркетинг":
                 sbSigner.append("Татьянкина Дениса Александровича");
                 initials = "Д.А. Татьянкин";
                 proxyNumber = "150";
