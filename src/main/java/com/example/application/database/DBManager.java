@@ -4,7 +4,13 @@ import com.example.application.data.entity.SampleContractor;
 import com.example.application.data.entity.SampleReport;
 
 import com.vaadin.flow.data.binder.Binder;
+import org.postgresql.copy.CopyManager;
+import org.postgresql.core.BaseConnection;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.*;
@@ -321,6 +327,18 @@ public class DBManager {
         String sql = "DELETE FROM public.logs\n" +
                 "\tWHERE date <= '" + date.minusMonths(1) + "';";
         executeStatement(sql, "Logs: Row is deleted");
+    }
+
+    // NEW //
+    public static void createCSVFromLogsTable(String fileName) throws SQLException, IOException {
+        CopyManager copyManager = new CopyManager((BaseConnection) connection);
+        // TODO Change to storage folder
+        String home = System.getProperty("user.home");
+        String path = home+"/Downloads/" + fileName;
+        File file = new File(path);
+        FileOutputStream fileOutputStream = new FileOutputStream(file);
+        String sql = "SELECT * FROM public.logs";
+        copyManager.copyOut("COPY (" + sql + ") TO STDOUT WITH (FORMAT CSV, HEADER)", fileOutputStream);
     }
 
 

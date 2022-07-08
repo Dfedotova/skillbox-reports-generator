@@ -1,5 +1,7 @@
 package com.example.application.views;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -283,12 +285,12 @@ public class MainLayout extends AppLayout {
         return button;
     }
 
+    // NEW //
     private Button createLogButton() {
         Button logButton = new Button();
         logButton.setIcon(VaadinIcon.RECORDS.create());
         logButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_LARGE);
         logButton.getElement().getStyle().set("margin-right", "10px");
-
         logButton.addClickListener(e -> createLogDialog().open());
         return logButton;
     }
@@ -316,14 +318,33 @@ public class MainLayout extends AppLayout {
         List<String> logs = DBManager.getRowsFromLogsTable();
 
         logLayout.add(header);
-        for (String l : logs)
-        {
+        for (String l : logs) {
             Paragraph logText = new Paragraph();
             logText.setText(l);
             logLayout.add(logText);
         }
 
         logLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
+        Button loadButton = new Button("Экспорт");
+        loadButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        loadButton.addClickListener(buttonClickEvent -> {
+            try {
+                // Generate random filename
+                String filename = "skillbox_logs.csv";
+
+                // create csv file with filename
+                DBManager.createCSVFromLogsTable(filename);
+
+                // Url to the file server
+                String url = "http://localhost:3000/" + filename;
+
+                // redirect to file server for downloading csv file
+                getUI().get().getPage().open(url, "_blank");
+            } catch (SQLException | IOException e) {
+                e.printStackTrace();
+            }
+        });
+        logLayout.add(loadButton);
 
         return logLayout;
     }
